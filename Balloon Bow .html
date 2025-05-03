@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Balloon Bow Blast</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Righteous&display=swap");
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to bottom, #000000, #1a1a2e);
+        overflow: hidden;
+        font-family: "Righteous", Arial, sans-serif;
+        color: white;
+      }
+      #game-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 0;
+        box-sizing: border-box;
+      }
+      #balloon {
+        width: 80px;
+        height: 100px;
+        position: relative;
+        margin-top: 40px;
+        animation: float 3s ease-in-out infinite;
+      }
+      #obstacle-container {
+        position: relative;
+        height: 300px;
+        width: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .circle {
+        position: absolute;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      }
+      #outer-circle {
+        width: 250px;
+        height: 250px;
+        animation: rotate 12s linear infinite;
+      }
+      #middle-circle {
+        width: 150px;
+        height: 150px;
+        animation: rotate-reverse 8s linear infinite;
+      }
+      #inner-circle {
+        width: 60px;
+        height: 60px;
+        animation: rotate 5s linear infinite;
+      }
+
+      /* Dashed circle segments for outer circle */
+      .circle-segment {
+        position: absolute;
+        border: 2px solid white;
+        border-radius: 50%;
+        width: 100%;
+        height: 100%;
+        clip-path: polygon(50% 50%, 100% 0%, 100% 33%);
+        transform-origin: center;
+      }
+
+      #outer-circle .circle-segment:nth-child(1) {
+        transform: rotate(0deg);
+      }
+      #outer-circle .circle-segment:nth-child(2) {
+        transform: rotate(90deg);
+      }
+      #outer-circle .circle-segment:nth-child(3) {
+        transform: rotate(180deg);
+      }
+      #outer-circle .circle-segment:nth-child(4) {
+        transform: rotate(270deg);
+      }
+
+      /* Dashed circle segments for middle circle */
+      #middle-circle .circle-segment:nth-child(1) {
+        transform: rotate(45deg);
+      }
+      #middle-circle .circle-segment:nth-child(2) {
+        transform: rotate(135deg);
+      }
+      #middle-circle .circle-segment:nth-child(3) {
+        transform: rotate(225deg);
+      }
+      #middle-circle .circle-segment:nth-child(4) {
+        transform: rotate(315deg);
+      }
+
+      /* Dashed circle segments for inner circle */
+      #inner-circle .circle-segment:nth-child(1) {
+        transform: rotate(30deg);
+        clip-path: polygon(50% 50%, 100% 0%, 100% 60%);
+      }
+      #inner-circle .circle-segment:nth-child(2) {
+        transform: rotate(210deg);
+        clip-path: polygon(50% 50%, 100% 0%, 100% 60%);
+      }
+
+      #bow {
+        width: 100px;
+        height: 60px;
+        margin-bottom: 40px;
+        animation: pulse 2s infinite;
+      }
+      .arrow {
+        position: absolute;
+        width: 6px;
+        height: 40px;
+        background-color: white;
+        z-index: 10;
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+      }
+      .arrow:before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: -7px;
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 15px solid white;
+      }
+      #chances {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: white;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+      }
+      .heart {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        margin-right: 5px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4757' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'%3E%3C/path%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+      }
+      #score {
+        position: absolute;
+        top: 86px;
+        right: 120px;
+        color: white;
+        font-size: 18px;
+      }
+      .control-button {
+        color: white;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 2px solid white;
+        border-radius: 5px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        font-family: "Righteous", Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 5px;
+      }
+      .control-button:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+      }
+      #controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+      }
+      #game-over,
+      #welcome-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+      }
+      #welcome-screen {
+        background: linear-gradient(135deg, #000000, #1a1a2e, #0f3460);
+      }
+      .modal-content {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        max-width: 500px;
+        backdrop-filter: blur(5px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+      h1 {
+        color: white;
+        font-size: 48px;
+        margin-bottom: 20px;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      }
+      p {
+        color: #cccccc;
+        margin-bottom: 20px;
+        line-height: 1.5;
+      }
+      .action-button {
+        color: black;
+        background-color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 12px 30px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        margin: 10px;
+        font-family: "Righteous", Arial, sans-serif;
+      }
+      .action-button:hover {
+        background-color: #cccccc;
+        transform: scale(1.05);
+      }
+      .mode-button {
+        color: white;
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 2px solid white;
+        border-radius: 5px;
+        padding: 12px 30px;
+        cursor: pointer;
+        font-size: 18px;
+        transition: all 0.3s ease;
+        margin: 10px;
+        font-family: "Righteous", Arial, sans-serif;
+      }
+      .mode-button.selected {
+        background-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        transform: scale(1.05);
+      }
+      .mode-button:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+      }
+      .difficulty-selector,
+      .mode-selector {
+        margin: 15px 0;
+      }
+      #pause-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 150;
+        backdrop-filter: blur(5px);
+      }
+      /* Dashed circle segments for outer circle */
+      .circle-segment {
+        position: absolute;
+        border: 2px solid white;
+        border-radius: 50%;
+        width: 100%;
+        height: 100%;
+        clip-path: polygon(50% 50%, 100% 0%, 100% 33%);
+        transform-origin: center;
+      }
+
+      #outer-circle .circle-segment:nth-child(1) {
+        transform: rotate(0deg);
+      }
+      #outer-circle .circle-segment:nth-child(2) {
+        transform: rotate(90deg);
+      }
+      #outer-circle .circle-segment:nth-child(3) {
+        transform: rotate(180deg);
+      }
+      #outer-circle .circle-segment:nth-child(4) {
+        transform: rotate(270deg);
+      }
+
+      /* Dashed circle segments for middle circle */
+      #middle-circle .circle-segment:nth-child(1) {
+        transform: rotate(45deg);
+      }
+      #middle-circle .circle-segment:nth-child(2) {
+        transform: rotate(135deg);
+      }
+      #middle-circle .circle-segment:nth-child(3) {
+        transform: rotate(225deg);
+      }
+      #middle-circle .circle-segment:nth-child(4) {
+        transform: rotate(315deg);
+      }
+
+      /* Dashed circle segments for inner circle */
+      #inner-circle .circle-segment:nth-child(1) {
+        transform: rotate(30deg);
+        clip-path: polygon(50% 50%, 100% 0%, 100% 60%);
+      }
+      #inner-circle .circle-segment:nth-child(2) {
+        transform: rotate(210deg);
+        clip-path: polygon(50% 50%, 100% 0%, 100% 60%);
+      }
+
+      /* Animations */
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes rotate-reverse {
+        from {
+          transform: rotate(360deg);
+        }
+        to {
+          transform: rotate(0deg);
+        }
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-15px);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      /* Responsive design */
+      @media (max-width: 768px) {
+        #obstacle-container {
+          transform: scale(0.8);
+        }
+
+        h1 {
+          font-size: 36px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-container">
+      <div id="chances"></div>
+      <div id="score">Score: 0</div>
+      <div id="controls">
+        <button id="pause-button" class="control-button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+        </button>
+        <button id="restart-button" class="control-button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M23 4v6h-6"></path>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        </button>
+        <button id="home-button" class="control-button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </button>
+        <button id="mute-button" class="control-button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path
+              d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"
+            ></path>
+          </svg>
+        </button>
+      </div>
+
+      <svg
+        id="balloon"
+        viewBox="0 0 100 120"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <ellipse
+          cx="50"
+          cy="50"
+          rx="40"
+          ry="50"
+          stroke="white"
+          stroke-width="2"
+          fill="transparent"
+        />
+        <path
+          d="M50,100 L50,115 M45,115 L55,115"
+          stroke="white"
+          stroke-width="2"
+          fill="transparent"
+        />
+        <path
+          d="M70,30 Q75,20 80,25"
+          stroke="white"
+          stroke-width="2"
+          fill="transparent"
+        />
+      </svg>
+
+      <div id="obstacle-container">
+        <div id="outer-circle" class="circle">
+          <div class="circle-segment"></div>
+          <div class="circle-segment"></div>
+          <div class="circle-segment"></div>
+          <div class="circle-segment"></div>
+        </div>
+        <div id="middle-circle" class="circle">
+          <div class="circle-segment"></div>
+          <div class="circle-segment"></div>
+          <div class="circle-segment"></div>
+          <div class="circle-segment"></div>
+        </div>
+        <div id="inner-circle" class="circle">
+          <div class="circle-segment"></div>
+          <div class="circle-segment"></div>
+        </div>
+      </div>
+
+      <svg id="bow" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M10,50 Q50,0 90,50"
+          stroke="#FEF7CD"
+          stroke-width="4"
+          fill="transparent"
+        />
+        <line x1="50" y1="50" x2="50" y2="10" stroke="white" stroke-width="2" />
+        <rect
+          x="46"
+          y="5"
+          width="8"
+          height="10"
+          stroke="white"
+          stroke-width="1"
+          fill="white"
+        />
+      </svg>
+    </div>
+
+    <div id="pause-overlay">
+      <div class="modal-content">
+        <h1>Game Paused</h1>
+        <button id="resume-button" class="action-button">Resume</button>
+      </div>
+    </div>
+
+    <div id="game-over" style="display: none">
+      <div class="modal-content">
+        <h1>Game Over</h1>
+        <div id="final-score">Score: 0</div>
+        <button id="restart-game-button" class="action-button">
+          Play Again
+        </button>
+      </div>
+    </div>
+
+    <div id="welcome-screen">
+      <div class="modal-content">
+        <h1>Balloon Bow Blast</h1>
+        <p>
+          Shoot arrows through the rotating obstacles to hit the balloon! Be
+          careful not to hit the white obstacles!
+        </p>
+
+        <div class="mode-selector">
+          <h3>Select Game Mode</h3>
+          <button id="classic-mode" class="mode-button selected">
+            Classic Mode
+          </button>
+          <button id="training-mode" class="mode-button">Training Mode</button>
+        </div>
+
+        <div class="difficulty-selector">
+          <h3>Select Difficulty</h3>
+          <button id="easy-difficulty" class="mode-button selected">
+            Easy
+          </button>
+          <button id="medium-difficulty" class="mode-button">Medium</button>
+          <button id="hard-difficulty" class="mode-button">Hard</button>
+        </div>
+
+        <p>
+          <strong>Instructions:</strong> Click anywhere on the screen to shoot
+          arrows upward. You have 15 chances to hit the balloon in classic mode
+          or 20 chances in training mode.
+        </p>
+        <button id="start-game-button" class="action-button">Start Game</button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Sound effects
+        const shootSound = new Audio(
+          "data:audio/wav;base64,//uQRAAAAWMSLwUIYAAsYkXgoQwAEaYLWfkWgAI0wWs/ItAAAGDgYtAgAyN+QWaAAihwMWm4G8QQRDiMcCBcH3Cc+CDv/7xA4Tvh9Rz/y8QADBwMWgQAZG/ILNAARQ4GLTcDeIIIhxGOBAuD7hOfBB3/94gcJ3w+o5/5eIAIAAAVwWgQAVQ2ORaIQwEMAJiDg95G4nQL7mQVWI6GwRcfsZAcsKkJvxgxEjzFUgfHoSQ9Qq7KNwqHwuB13MA4a1q/DmBrHgPcmjiGoh//EwC5nGPEmS4RcfkVKOhJf+WOgoxJclFz3kgn//dBA+ya1GhurNn8zb//9NNutNuhz31f////9vt///z+IdAEAAAK4LQIAKobHItEIYCGAExBwe8jcToF9zIKrEdDYIuP2MgOWFSE34wYiR5iqQPj0JIeoVdlG4VD4XA67mAcNa1fhzA1jwHuTRxDUQ//iYBczjHiTJcIuPyKlHQkv/LHQUYkuSi57yQT//uggfZNajQ3Vmz+Zt//+mm3Wm3Q576v////+32///5/EOgAAADVghQAAAAA//uQZAUAB1WI0PZugAAAAAoQwAAAEk3nRd2qAAAAACiDgAAAAAAABCqEEQRLCgwpBGMlJkIz8jKhGvj4k6jzRnqasNKIeoh5gI7BJaC1A1AoNBjJgbyApVS4IDlZgDU5WUAxEKDNmmALHzZp0Fkz1FMTmGFl1FMEyodIavcCAUHDWrKAIA4aa2oCgILEBupZgHvAhEBcZ6joQBxS76AgccrFlczBvKLC0QI2cBoCFvfTDAo7eoOQInqDPBtvrDEZBNYN5xwNwxQRfw8ZQ5wQVLvO8OYU+mHvFLlDh05Mdg7BT6YrRPpCBznMB2r//xKJjyyOh+cImr2/4doscwD6neZjuZR4AgAABYAAAABy1xcdQtxYBYYZdifkUDgzzXaXn98Z0oi9ILU5mBjFANmRwlVJ3/6jYDAmxaiDG3/6xjQQCCKkRb/6kg/wW+kSJ5//rLobkLSiKmqP/0ikJuDaSaSf/6JiLYLEYnW/+kXg1WRVJL/9EmQ1YZIsv/6Qzwy5qk7/+tEU0nkls3/zIUMPKNX/6yZLf+kFgAfgGyLFAUwY//uQZAUABcd5UiNPVXAAAApAAAAAE0VZQKw9ISAAACgAAAAAVQIygIElVrFkBS+Jhi+EAuu+lKAkYUEIsmEAEoMeDmCETMvfSHTGkF5RWH7kz/ESHWPAq/kcCRhqBtMdokPdM7vil7RG98A2sc7zO6ZvTdM7pmOUAZTnJW+NXxqmd41dqJ6mLTXxrPpnV8ij8+PDw7Fpji3fEA4z/PEJ6YOB5hKh4dj3EvXhxPqH/SKUY3rJ7srZ4FZnh1PMAtPhwP6fl2PMJMPDgeQ4rY8YT6Gzao0eAEA409DuggmTnFnOcSCiEiLMgxCiTI6Cq5DZUd3Qmp10vO0LaLTd2cjN4fOumlc7lUYbSQcZFkutRG7g6JKZKy0RmdLY680CDnEJ+UMkpFFe1RN7nxdVpXrC4aTtnaurOnYercZg2YVmLN/d/gczfEimrE/fs/bOuq29Zmn8tloORaXgZgGa78yO9/cnXm2BpaGvq25Dv9S4E9+5SIc9PqupJKhYFSSl47+Qcr1mYNAAAAeNpjYGBkYmBlZmJkYph0Tyhh8k5NKSPMYHHN7ErIZBQDAPzRB0p4nGNgYGBkAIIztovOg+hzrowPMABG5QgeAAAA"
+        );
+        const popSound = new Audio(
+          'victory-shouts-demo-310503.mp3'
+        );
+        const gameOverSound = new Audio(
+          'gameover-86548.mp3'
+        );
+
+        // Game elements
+        const gameContainer = document.getElementById("game-container");
+        const balloon = document.getElementById("balloon");
+        const bow = document.getElementById("bow");
+        const outerCircle = document.getElementById("outer-circle");
+        const middleCircle = document.getElementById("middle-circle");
+        const innerCircle = document.getElementById("inner-circle");
+        const chancesDisplay = document.getElementById("chances");
+        const scoreDisplay = document.getElementById("score");
+        const finalScoreDisplay = document.getElementById("final-score");
+        const gameOverScreen = document.getElementById("game-over");
+        const welcomeScreen = document.getElementById("welcome-screen");
+        const pauseOverlay = document.getElementById("pause-overlay");
+
+        // Game mode buttons
+        const classicModeBtn = document.getElementById("classic-mode");
+        const trainingModeBtn = document.getElementById("training-mode");
+
+        // Difficulty buttons
+        const easyDifficultyBtn = document.getElementById("easy-difficulty");
+        const mediumDifficultyBtn =
+          document.getElementById("medium-difficulty");
+        const hardDifficultyBtn = document.getElementById("hard-difficulty");
+
+        // Buttons
+        const homeButton = document.getElementById("home-button");
+        const pauseButton = document.getElementById("pause-button");
+        const restartButton = document.getElementById("restart-button");
+        const muteButton = document.getElementById("mute-button");
+        const startGameButton = document.getElementById("start-game-button");
+        const resumeButton = document.getElementById("resume-button");
+        const restartGameButton = document.getElementById(
+          "restart-game-button"
+        );
+
+        // Game state
+        let chances = 15;
+        let gameActive = false;
+        let arrows = [];
+        let isMuted = false;
+        let isPaused = false;
+        let heartIcons = "";
+        let score = 0;
+        let gameMode = "classic"; // classic or training
+        let difficulty = "easy"; // easy, medium, hard
+
+        // Update chances display
+        function updateChancesDisplay() {
+          heartIcons = "";
+          for (let i = 0; i < Math.min(chances, 10); i++) {
+            heartIcons += '<div class="heart"></div>';
+          }
+          chancesDisplay.innerHTML = heartIcons + " " + chances;
+        }
+
+        // Update score display
+        function updateScoreDisplay() {
+          scoreDisplay.innerHTML = "Score: " + score;
+          if (finalScoreDisplay) {
+            finalScoreDisplay.innerHTML = "Score: " + score;
+          }
+        }
+
+        // Play sound with mute control
+        function playSound(sound) {
+          if (!isMuted) {
+            sound.currentTime = 0;
+            sound.play();
+          }
+        }
+
+        // Apply difficulty settings
+        function applyDifficulty() {
+          // Reset any existing animations
+          outerCircle.style.animation = "";
+          middleCircle.style.animation = "";
+          innerCircle.style.animation = "";
+
+          // Apply animation based on difficulty
+          setTimeout(() => {
+            if (difficulty === "easy") {
+              outerCircle.style.animation = "rotate 12s linear infinite";
+              middleCircle.style.animation =
+                "rotate-reverse 8s linear infinite";
+              innerCircle.style.animation = "rotate 5s linear infinite";
+            } else if (difficulty === "medium") {
+              outerCircle.style.animation = "rotate 8s linear infinite";
+              middleCircle.style.animation =
+                "rotate-reverse 5s linear infinite";
+              innerCircle.style.animation = "rotate 3s linear infinite";
+            } else if (difficulty === "hard") {
+              outerCircle.style.animation = "rotate 5s linear infinite";
+              middleCircle.style.animation =
+                "rotate-reverse 3s linear infinite";
+              innerCircle.style.animation = "rotate 2s linear infinite";
+            }
+          }, 10);
+        }
+
+        // Check collision between arrow and balloon
+        function checkBalloonCollision(arrow) {
+          const arrowRect = arrow.getBoundingClientRect();
+          const balloonRect = balloon.getBoundingClientRect();
+
+          return !(
+            arrowRect.bottom < balloonRect.top + 20 ||
+            arrowRect.top > balloonRect.bottom - 20 ||
+            arrowRect.right < balloonRect.left + 20 ||
+            arrowRect.left > balloonRect.right - 20
+          );
+        }
+
+        // Check collision between arrow and obstacles
+        function checkObstacleCollision(arrow, obstacle) {
+          const arrowRect = arrow.getBoundingClientRect();
+          const obstacleRect = obstacle.getBoundingClientRect();
+
+          // Calculate center points
+          const arrowCenterX = arrowRect.left + arrowRect.width / 2;
+          const arrowCenterY = arrowRect.top + arrowRect.height / 2;
+          const obstacleCenterX = obstacleRect.left + obstacleRect.width / 2;
+          const obstacleCenterY = obstacleRect.top + obstacleRect.height / 2;
+
+          // Calculate distance between centers
+          const dx = arrowCenterX - obstacleCenterX;
+          const dy = arrowCenterY - obstacleCenterY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          // Check if arrow is hitting the circle border (approximation)
+          const outerRadius = obstacleRect.width / 2;
+          const innerRadius = outerRadius - 4; // Border width approximation
+
+          // Check if arrow is between inner and outer radius
+          return distance <= outerRadius && distance >= innerRadius;
+        }
+
+        // Create arrow function
+        function createArrow() {
+          if (!gameActive || isPaused || chances <= 0) return;
+
+          chances--;
+          updateChancesDisplay();
+          playSound(shootSound);
+
+          const arrow = document.createElement("div");
+          arrow.classList.add("arrow");
+
+          // Position the arrow at the bow's position
+          const bowRect = bow.getBoundingClientRect();
+          arrow.style.left = bowRect.left + bowRect.width / 2 - 3 + "px";
+          arrow.style.top = bowRect.top - 10 + "px";
+
+          document.body.appendChild(arrow);
+          arrows.push(arrow);
+
+          // Check if out of chances
+          if (chances <= 0) {
+            setTimeout(() => {
+              gameOverScreen.style.display = "flex";
+              gameActive = false;
+              playSound(gameOverSound);
+            }, 1000);
+          }
+        }
+
+        // Animate arrows
+        function animateArrows() {
+          if (!isPaused) {
+            for (let i = 0; i < arrows.length; i++) {
+              const arrow = arrows[i];
+              const arrowRect = arrow.getBoundingClientRect();
+              arrow.style.top = arrowRect.top - 10 + "px";
+
+              // Check collision with circles
+              if (
+                checkObstacleCollision(arrow, outerCircle) ||
+                checkObstacleCollision(arrow, middleCircle) ||
+                checkObstacleCollision(arrow, innerCircle)
+              ) {
+                arrow.remove();
+                arrows.splice(i, 1);
+                i--;
+                continue;
+              }
+
+              // Check collision with balloon
+              else if (checkBalloonCollision(arrow)) {
+                // Balloon is hit - add score based on game mode
+                score += 100;
+                updateScoreDisplay();
+
+                // In training mode, respawn the balloon
+                if (gameMode === "training") {
+                  arrow.remove();
+                  arrows.splice(i, 1);
+                  i--;
+
+                  // Play pop sound
+                  playSound(popSound);
+
+                  // Show temporary "Hit" message
+                  const hitMessage = document.createElement("div");
+                  hitMessage.textContent = "+100";
+                  hitMessage.style.position = "absolute";
+                  hitMessage.style.top = "30%";
+                  hitMessage.style.left = "50%";
+                  hitMessage.style.transform = "translate(-50%, -50%)";
+                  hitMessage.style.color = "#FEF7CD";
+                  hitMessage.style.fontSize = "36px";
+                  hitMessage.style.fontFamily =
+                    "'Righteous', Arial, sans-serif";
+                  hitMessage.style.textShadow =
+                    "0 0 10px rgba(255, 255, 255, 0.5)";
+                  hitMessage.style.zIndex = "100";
+                  gameContainer.appendChild(hitMessage);
+
+                  // Remove message after a delay
+                  setTimeout(() => {
+                    hitMessage.remove();
+                  }, 1000);
+
+                  // If out of chances in training mode, end game
+                  if (chances <= 0) {
+                    setTimeout(() => {
+                      gameOverScreen.style.display = "flex";
+                      gameActive = false;
+                      playSound(gameOverSound);
+                    }, 1000);
+                  }
+
+                  continue;
+                } else {
+                  // Classic mode - win the game
+                  balloon.style.display = "none";
+                  arrow.remove();
+                  arrows.splice(i, 1);
+                  i--;
+
+                  // Play pop sound
+                  playSound(popSound);
+
+                  // Show win message
+                  const winMessage = document.createElement("div");
+                  winMessage.textContent = "You Win!";
+                  winMessage.style.position = "absolute";
+                  winMessage.style.top = "30%";
+                  winMessage.style.left = "50%";
+                  winMessage.style.transform = "translate(-50%, -50%)";
+                  winMessage.style.color = "white";
+                  winMessage.style.fontSize = "48px";
+                  winMessage.style.fontFamily =
+                    "'Righteous', Arial, sans-serif";
+                  winMessage.style.textShadow =
+                    "0 0 10px rgba(255, 255, 255, 0.5)";
+                  gameContainer.appendChild(winMessage);
+
+                  // Add restart button under win message
+                  const winRestartButton = document.createElement("button");
+                  winRestartButton.textContent = "Play Again";
+                  winRestartButton.className = "action-button";
+                  winRestartButton.style.position = "absolute";
+                  winRestartButton.style.top = "40%";
+                  winRestartButton.style.left = "50%";
+                  winRestartButton.style.transform = "translate(-50%, -50%)";
+                  gameContainer.appendChild(winRestartButton);
+
+                  winRestartButton.addEventListener("click", function () {
+                    location.reload();
+                  });
+
+                  gameActive = false;
+                  continue;
+                }
+              }
+
+              // Remove arrows that are out of screen
+              else if (arrowRect.bottom < 0) {
+                arrow.remove();
+                arrows.splice(i, 1);
+                i--;
+              }
+            }
+          }
+
+          requestAnimationFrame(animateArrows);
+        }
+
+        // Toggle pause function
+        function togglePause() {
+          isPaused = !isPaused;
+          if (isPaused) {
+            pauseOverlay.style.display = "flex";
+          } else {
+            pauseOverlay.style.display = "none";
+          }
+        }
+
+        // Mode selection handlers
+        classicModeBtn.addEventListener("click", function () {
+          gameMode = "classic";
+          chances = 15;
+          classicModeBtn.classList.add("selected");
+          trainingModeBtn.classList.remove("selected");
+        });
+
+        trainingModeBtn.addEventListener("click", function () {
+          gameMode = "training";
+          chances = 20;
+          trainingModeBtn.classList.add("selected");
+          classicModeBtn.classList.remove("selected");
+        });
+
+        // Difficulty selection handlers
+        easyDifficultyBtn.addEventListener("click", function () {
+          difficulty = "easy";
+          easyDifficultyBtn.classList.add("selected");
+          mediumDifficultyBtn.classList.remove("selected");
+          hardDifficultyBtn.classList.remove("selected");
+        });
+
+        mediumDifficultyBtn.addEventListener("click", function () {
+          difficulty = "medium";
+          mediumDifficultyBtn.classList.add("selected");
+          easyDifficultyBtn.classList.remove("selected");
+          hardDifficultyBtn.classList.remove("selected");
+        });
+
+        hardDifficultyBtn.addEventListener("click", function () {
+          difficulty = "hard";
+          hardDifficultyBtn.classList.add("selected");
+          easyDifficultyBtn.classList.remove("selected");
+          mediumDifficultyBtn.classList.remove("selected");
+        });
+
+        // Start animation
+        animateArrows();
+
+        // Initialize game
+        updateChancesDisplay();
+        updateScoreDisplay();
+
+        // Event listeners
+        gameContainer.addEventListener("click", createArrow);
+
+        homeButton.addEventListener("click", function () {
+          location.reload();
+        });
+
+        pauseButton.addEventListener("click", togglePause);
+        resumeButton.addEventListener("click", togglePause);
+
+        restartButton.addEventListener("click", function () {
+          location.reload();
+        });
+
+        muteButton.addEventListener("click", function () {
+          isMuted = !isMuted;
+          if (isMuted) {
+            muteButton.innerHTML =
+              '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>';
+          } else {
+            muteButton.innerHTML =
+              '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
+          }
+        });
+
+        startGameButton.addEventListener("click", function () {
+          welcomeScreen.style.display = "none";
+          gameActive = true;
+          applyDifficulty();
+
+          // Reset score for new game
+          score = 0;
+          updateScoreDisplay();
+        });
+
+        // Restart game from game over screen
+        restartGameButton.addEventListener("click", function () {
+          location.reload();
+        });
+
+        // Keyboard controls
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "p" || event.key === "P") {
+            if (gameActive) togglePause();
+          } else if (event.key === " " || event.key === "Enter") {
+            if (welcomeScreen.style.display !== "none") {
+              welcomeScreen.style.display = "none";
+              gameActive = true;
+              applyDifficulty();
+              // Reset score for new game
+              score = 0;
+              updateScoreDisplay();
+            } else if (gameActive && !isPaused) {
+              createArrow();
+            }
+          }
+        });
+
+        // Make the game responsive
+        function handleResize() {
+          const vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty("--vh", `${vh}px`);
+        }
+
+        window.addEventListener("resize", handleResize);
+        handleResize();
+      });
+      document.addEventListener('DOMContentLoaded', () => {
+        // ... keep existing code (sound effects and game elements initialization)
+        
+        // Game state
+        let chances = 15;
+        let gameActive = false;
+        let arrows = [];
+        let isMuted = false;
+        let isPaused = false;
+        let heartIcons = '';
+        let score = 0;
+        let gameMode = 'classic'; // classic or training
+        let difficulty = 'easy';   // easy, medium, hard
+        
+        // ... keep existing code (updateChancesDisplay, updateScoreDisplay, and playSound functions)
+        
+        // Improved collision detection helper function
+        function isPointInSegment(x, y, cx, cy, radius, startAngle, endAngle) {
+            // Calculate the angle between center and point
+            const angle = Math.atan2(y - cy, x - cx) * 180 / Math.PI;
+            let adjustedAngle = (angle < 0) ? angle + 360 : angle;
+            
+            // Normalize angles to 0-360 range
+            const normalizedStartAngle = ((startAngle % 360) + 360) % 360;
+            const normalizedEndAngle = ((endAngle % 360) + 360) % 360;
+            
+            // Check if angle is between start and end angles
+            if (normalizedStartAngle < normalizedEndAngle) {
+                return (adjustedAngle >= normalizedStartAngle && adjustedAngle <= normalizedEndAngle);
+            } else {
+                // Handle case where the segment crosses the 0/360 boundary
+                return (adjustedAngle >= normalizedStartAngle || adjustedAngle <= normalizedEndAngle);
+            }
+        }
+
+        // Get current rotation of an element with animation
+        function getCurrentRotation(element) {
+            const style = window.getComputedStyle(element);
+            const transform = style.getPropertyValue('transform');
+            
+            if (transform === 'none' || transform === '') {
+                return 0;
+            }
+            
+            // Extract rotation from matrix
+            const matrix = transform.split('(')[1].split(')')[0].split(',');
+            const a = parseFloat(matrix[0]);
+            const b = parseFloat(matrix[1]);
+            const angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
+            return (angle < 0) ? angle + 360 : angle;
+        }
+        
+        // Apply difficulty settings
+        function applyDifficulty() {
+            // ... keep existing code (difficulty settings)
+        }
+        
+        // Check collision between arrow and balloon
+        function checkBalloonCollision(arrow) {
+            const arrowRect = arrow.getBoundingClientRect();
+            const balloonRect = balloon.getBoundingClientRect();
+            
+            return !(
+                arrowRect.bottom < balloonRect.top + 20 ||
+                arrowRect.top > balloonRect.bottom - 20 ||
+                arrowRect.right < balloonRect.left + 20 ||
+                arrowRect.left > balloonRect.right - 20
+            );
+        }
+        
+        // Improved check collision between arrow and obstacles
+        function checkObstacleCollision(arrow, obstacle) {
+            const arrowRect = arrow.getBoundingClientRect();
+            const obstacleRect = obstacle.getBoundingClientRect();
+            
+            // Calculate center points
+            const arrowCenterX = arrowRect.left + (arrowRect.width / 2);
+            const arrowCenterY = arrowRect.top + (arrowRect.height / 2);
+            const obstacleCenterX = obstacleRect.left + (obstacleRect.width / 2);
+            const obstacleCenterY = obstacleRect.top + (obstacleRect.height / 2);
+            
+            // Calculate distance between centers
+            const dx = arrowCenterX - obstacleCenterX;
+            const dy = arrowCenterY - obstacleCenterY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            const outerRadius = obstacleRect.width / 2;
+            const innerRadius = outerRadius - 4; // Border width approximation
+            
+            // Check if arrow is potentially hitting the circle border
+            if (distance <= outerRadius && distance >= innerRadius) {
+                // Get current rotation of the obstacle
+                const baseRotation = getCurrentRotation(obstacle);
+                
+                // Calculate angle between arrow and obstacle center
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                let adjustedAngle = (angle < 0) ? angle + 360 : angle;
+                
+                // Adjust the angle based on the current rotation of the obstacle
+                adjustedAngle = (adjustedAngle - baseRotation + 360) % 360;
+                
+                // Check if arrow is in a segment based on the obstacle type
+                if (obstacle.id === 'outer-circle') {
+                    // Outer circle has 4 segments at 0, 90, 180, 270 degrees, each spanning ~33 degrees
+                    return isPointInSegment(arrowCenterX, arrowCenterY, obstacleCenterX, obstacleCenterY, distance, 
+                                           0, 33) ||
+                           isPointInSegment(arrowCenterX, arrowCenterY, obstacleCenterX, obstacleCenterY, distance, 
+                                           90, 123) ||
+                           isPointInSegment(arrowCenterX, arrowCenterY, obstacleCenterX, obstacleCenterY, distance, 
+                                           180, 213) ||
+                           isPointInSegment(arrowCenterX, arrowCenterY, obstacleCenterX, obstacleCenterY, distance, 
+                                           270, 303);
+                } else if (obstacle.id === 'middle-circle') {
+                    // Middle circle has 4 segments at 45, 135, 225, 315 degrees
+                    return isPointInSegment(arrowCenterX, arrowCenterY, obstacleCenterX, obstacleCenterY, distance, 
+                                           45, 78) ||
+                           isPointInSegment(arrowCenterX, arrowCenterY, obstacleCenterX, obstacleCenterY, distance, 
+                                           135, 168) ||
+                           isPointInSegment(arrowCenterX, arrowCenterY, obstacleCenterX, obstacleCenterY, distance, 
+                                           225, 258) ||
+                           isPointInSegment(arrowCenterX, arrowCenterY, obstacleCenterX, obstacleCenterY, distance, 
+                                           315, 348);
+                } else if (obstacle.id === 'inner-circle') {
+                    // Inner circle has 2 segments at 30, 210 degrees, spanning 60 degrees
+                    return isPointInSegment(arrowCenterX, arrowCenterY, obstacleCenterX, obstacleCenterY, distance, 
+                                           30, 90) ||
+                           isPointInSegment(arrowCenterX, arrowCenterY, obstacleCenterX, obstacleCenterY, distance, 
+                                           210, 270);
+                }
+            }
+            
+            return false;
+        }
+        
+        // Create arrow function
+        function createArrow() {
+            // ... keep existing code (create arrow function)
+        }
+        
+        // Animate arrows with improved collision detection
+        function animateArrows() {
+            if (!isPaused) {
+                for (let i = 0; i < arrows.length; i++) {
+                    const arrow = arrows[i];
+                    const arrowRect = arrow.getBoundingClientRect();
+                    arrow.style.top = (arrowRect.top - 10) + 'px';
+                    
+                    // Check collision with circles (only the visible segments)
+                    if (checkObstacleCollision(arrow, outerCircle) ||
+                        checkObstacleCollision(arrow, middleCircle) ||
+                        checkObstacleCollision(arrow, innerCircle)) {
+                        arrow.remove();
+                        arrows.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+                    
+                    // Check collision with balloon
+                    else if (checkBalloonCollision(arrow)) {
+                        // ... keep existing code (balloon hit logic)
+                    }
+                    
+                    // Remove arrows that are out of screen
+                    else if (arrowRect.bottom < 0) {
+                        arrow.remove();
+                        arrows.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+            
+            requestAnimationFrame(animateArrows);
+        }
+        
+        // ... keep existing code (remaining game functions and event listeners)
+    });
+    </script>
+  </body>
+</html>
+gameOverSound
